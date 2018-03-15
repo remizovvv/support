@@ -14,19 +14,21 @@ class UtilsResponseJson
     const CODE_OK = 200;
     const CORE_ERROR = 422;
 
-    public static function okResponse($data)
+    public static function okResponse($data, $wrap = false)
     {
+        $result = $wrap ? ['data' => $data] : $data;
         return response()->json([
             'status' => true,
-            'result' => $data,
+            'result' => $result,
         ], self::CODE_OK);
     }
 
-    public static function errorResponse($errorMsg)
+    public static function errorResponse($data, $wrap = false)
     {
+        $result = $wrap ? ['data' => $data] : $data;
         return response()->json([
             'status' => false,
-            'result' => $errorMsg,
+            'result' => $result,
         ], self::CORE_ERROR);
     }
 }
