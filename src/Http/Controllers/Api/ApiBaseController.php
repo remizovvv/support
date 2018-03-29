@@ -17,17 +17,17 @@ class ApiBaseController extends Controller
         $this->request = $request;
     }
 
-    protected function okResponse($data = [])
+    protected function okResponse($data = [], $wrap = false)
     {
         $finalData = $data;
         if (($data instanceof Resource) || ($data instanceof ResourceCollection)) {
             $finalData = $data->toResponse($this->request)->getData();
         }
-        return UtilsResponseJson::okResponse($finalData);
+        return UtilsResponseJson::okResponse($finalData, $wrap);
     }
 
-    protected function errorResponse($errorMsg = '')
+    protected function errorResponse($errorMsg = '', $wrap = false)
     {
-        return UtilsResponseJson::errorResponse($errorMsg);
+        return UtilsResponseJson::errorResponse($errorMsg, $wrap);
     }
 }
