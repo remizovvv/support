@@ -93,6 +93,11 @@ abstract class ModelRepository implements IModelRepository
         return $this->model;
     }
 
+    public function query()
+    {
+        return $this->model->query();
+    }
+
     public function getAvailableRelations()
     {
         return $this->model->availableRelations ?: [];

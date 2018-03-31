@@ -22,6 +22,8 @@ interface IModelRepository
      */
     public function getModel();
 
+    public function query();
+
     /**
      * Возвращает список доступных связей модели, либо пустой массив, если свойство отсутствует
      * @return array
