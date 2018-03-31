@@ -7,6 +7,7 @@ use Illuminate\Http\Resources\Json\Resource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Routing\Controller;
 use Omadonex\Support\Classes\Utils\UtilsResponseJson;
+use App\User;
 
 class ApiBaseController extends Controller
 {
@@ -29,5 +30,12 @@ class ApiBaseController extends Controller
     protected function errorResponse($errorMsg = '', $wrap = false)
     {
         return UtilsResponseJson::errorResponse($errorMsg, $wrap);
+    }
+
+    protected function getAuthUser()
+    {
+        $authInfo = $this->request->header('Authorization');
+        $token = explode(' ', $authInfo)[1];
+        return User::where('api_token', $token)->first();
     }
 }
