@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Omadonex\Support\Classes\CustomConstants;
 use Omadonex\Support\Classes\Exceptions\OmxModelNotFoundException;
+use Omadonex\Support\Classes\Exceptions\OmxModelNotSmartFoundException;
 use Omadonex\Support\Classes\Exceptions\OmxModelNotUsesTraitException;
 use Omadonex\Support\Interfaces\Model\IModelRepository;
 use Omadonex\Support\Traits\CanBeActivatedTrait;
@@ -103,20 +104,27 @@ abstract class ModelRepository implements IModelRepository
         return $this->model->availableRelations ?: [];
     }
 
-    public function find($id, $relations = true, $trashed = null)
+    public function find($id, $relations = true, $trashed = null, $smart = false, $smartField = null)
     {
-        $model = $this->makeQB($relations, $trashed, null)->find($id);
-
-        if (is_null($model)) {
-            throw new OmxModelNotFoundException($this->model, $id);
+        if (!$smart) {
+            $model = $this->makeQB($relations, $trashed, null)->find($id);
+            if (is_null($model)) {
+                throw new OmxModelNotFoundException($this->model, $id);
+            }
+        } else {
+            $field = $smartField ?: $this->model->getRouteKeyName();
+            $model = $this->makeQB($relations, $trashed, null)->where($field, $id)->first();
+            if (is_null($model)) {
+                throw new OmxModelNotSmartFoundException($this->model, $id, $field);
+            }
         }
 
         return $model;
     }
 
-    public function findResource($id, $relations = true, $trashed = null)
+    public function findResource($id, $relations = true, $trashed = null, $smart = false, $smartField = null)
     {
-        return $this->getResource($this->find($id, $relations, $trashed));
+        return $this->getResource($this->find($id, $relations, $trashed, $smart, $smartField));
     }
 
     public function list($relations = true, $trashed = null, $active = null, $paginate = true)

@@ -43,9 +43,9 @@ interface IModelRepository
      * @throws OmxModelNotUsesTraitException
      * @return Model
      */
-    public function find($id, $relations = true, $trashed = null);
+    public function find($id, $relations = true, $trashed = null, $smart = false, $smartField = null);
 
-    public function findResource($id, $relations = true, $trashed = null);
+    public function findResource($id, $relations = true, $trashed = null, $smart = false, $smartField = null);
 
     /**
      * Получает коллекцию элементов, загружая указанные связи и учитывая `active`
