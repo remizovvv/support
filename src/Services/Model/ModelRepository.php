@@ -80,7 +80,7 @@ abstract class ModelRepository implements IModelRepository
         return new $this->resourceClass($data);
     }
 
-    public function getResourceCollection($data, $paginate)
+    public function getResourceCollection($data, $paginate = true)
     {
         if ($paginate) {
             return new PaginateResourceCollection($data, $this->resourceClass);
