@@ -46,7 +46,25 @@ abstract class ModelRepository implements IModelRepository
         return $qb;
     }
 
-    private function makeQB($relations, $trashed, $active)
+    protected function getPaginatedResult($qb, $paginate)
+    {
+        return (!$paginate) ? $qb->get() : $qb->paginate(($paginate === true) ? $this->model->getPerPage() : $paginate);
+    }
+
+    protected function convertToResource($data, $paginate = true)
+    {
+        if ($data instanceof Model::class) {
+            return new $this->resourceClass($data);
+        }
+
+        if ($paginate) {
+            return new PaginateResourceCollection($data, $this->resourceClass);
+        }
+
+        return $this->resourceClass::collection($data);
+    }
+
+    protected function makeQB($relations, $trashed, $active)
     {
         $qb = $this->model->query();
 
@@ -74,20 +92,6 @@ abstract class ModelRepository implements IModelRepository
         return $this->attachRelations($qb, $relations);
     }
 
-    public function getResource($data)
-    {
-        return new $this->resourceClass($data);
-    }
-
-    public function getResourceCollection($data, $paginate)
-    {
-        if ($paginate) {
-            return new PaginateResourceCollection($data, $this->resourceClass);
-        }
-
-        return $this->resourceClass::collection($data);
-    }
-
     public function getModel()
     {
         return $this->model;
@@ -98,7 +102,7 @@ abstract class ModelRepository implements IModelRepository
         return $this->model->availableRelations ?: [];
     }
 
-    public function find($id, $relations = true, $trashed = null)
+    public function find($id, $relations = true, $trashed = null, $resource = false)
     {
         $model = $this->makeQB($relations, $trashed, null)->find($id);
 
@@ -106,24 +110,16 @@ abstract class ModelRepository implements IModelRepository
             throw new OmxModelNotFoundException($this->model, $id);
         }
 
-        return $model;
+        return $resource ? $this->convertToResource($model) : $model;
     }
 
-    public function findResource($id, $relations = true, $trashed = null)
-    {
-        return $this->getResource($this->find($id, $relations, $trashed));
-    }
-
-    public function list($relations = true, $trashed = null, $active = null, $paginate = true)
+    public function list($relations = true, $trashed = null, $active = null, $paginate = true, $resource = false)
     {
         $qb = $this->makeQB($relations, $trashed, $active);
 
-        return (!$paginate) ? $qb->get() : $qb->paginate(($paginate === true) ? $this->model->getPerPage() : $paginate);
-    }
+        $result = $this->getPaginatedResult($qb, $paginate);
 
-    public function listResource($relations = true, $trashed = null, $active = null, $paginate = true)
-    {
-        return $this->getResourceCollection($this->list($relations, $trashed, $active, $paginate), $paginate);
+        return $resource ? $this->convertToResource($result, $paginate) : $result;
     }
 
     public function agrCount($trashed = null, $active = null)
