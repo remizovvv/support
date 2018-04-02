@@ -102,9 +102,9 @@ class ApiModelController extends ApiBaseController
         throw new OmxBadParameterTrashedException;
     }
 
-    protected function modelFind($id, $resource = false)
+    protected function modelFind($id, $resource = false, $smart = false, $smartField = null)
     {
-        return $this->repo->find($id, $this->relations, $this->trashed, $resource);
+        return $this->repo->findResource($id, $this->relations, $this->trashed, $resource, $smart, $smartField);
     }
 
     protected function modelList($resource = false)

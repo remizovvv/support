@@ -14,8 +14,9 @@ class WebBaseController extends Controller
         $this->request = $request;
     }
 
-    protected function getResourceData($resourceData)
+    protected function getResourceData($resourceData, $encode = true)
     {
-        return json_encode($resourceData->toResponse($this->request)->getData());
+        $data = $resourceData->toResponse($this->request)->getData();
+        return $encode ? json_encode($data) : $data;
     }
 }

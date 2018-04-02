@@ -22,6 +22,8 @@ interface IModelRepository
      */
     public function getModel();
 
+    public function query();
+
     /**
      * Возвращает список доступных связей модели, либо пустой массив, если свойство отсутствует
      * @return array
@@ -41,9 +43,9 @@ interface IModelRepository
      * @throws OmxModelNotUsesTraitException
      * @return Model
      */
-    public function find($id, $relations = true, $trashed = null);
+    public function find($id, $relations = true, $trashed = null, $smart = false, $smartField = null);
 
-    public function findResource($id, $relations = true, $trashed = null);
+    public function findResource($id, $relations = true, $trashed = null, $smart = false, $smartField = null);
 
     /**
      * Получает коллекцию элементов, загружая указанные связи и учитывая `active`
