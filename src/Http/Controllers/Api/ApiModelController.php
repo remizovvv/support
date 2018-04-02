@@ -115,20 +115,14 @@ class ApiModelController extends ApiBaseController
     protected function modelCreate($data, $resource = false)
     {
         $model = $this->service->create($data);
-        if ($resource) {
-            return $this->repo->getResource($model);
-        }
 
-        return $model;
+        return $resource ? $this->repo->convertToResource($model) : $model;
     }
 
     protected function modelUpdate($id, $data, $resource = false)
     {
         $model = $this->service->update($id, $data);
-        if ($resource) {
-            return $this->repo->getResource($model);
-        }
 
-        return $model;
+        return $resource ? $this->repo->convertToResource($model) : $model;
     }
 }

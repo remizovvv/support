@@ -52,19 +52,6 @@ abstract class ModelRepository implements IModelRepository
         return (!$paginate) ? $qb->get() : $qb->paginate(($paginate === true) ? $this->model->getPerPage() : $paginate);
     }
 
-    protected function convertToResource($data, $paginate = true)
-    {
-        if ($data instanceof Model::class) {
-            return new $this->resourceClass($data);
-        }
-
-        if ($paginate) {
-            return new PaginateResourceCollection($data, $this->resourceClass);
-        }
-
-        return $this->resourceClass::collection($data);
-    }
-
     protected function makeQB($relations, $trashed, $active)
     {
         $qb = $this->model->query();
@@ -106,6 +93,19 @@ abstract class ModelRepository implements IModelRepository
     public function getAvailableRelations()
     {
         return $this->model->availableRelations ?: [];
+    }
+
+    public function convertToResource($data, $paginate = true)
+    {
+        if ($data instanceof Model::class) {
+            return new $this->resourceClass($data);
+        }
+
+        if ($paginate) {
+            return new PaginateResourceCollection($data, $this->resourceClass);
+        }
+
+        return $this->resourceClass::collection($data);
     }
 
     public function find($id, $resource = false, $relations = true, $trashed = null, $resource = false, $smart = false, $smartField = null)

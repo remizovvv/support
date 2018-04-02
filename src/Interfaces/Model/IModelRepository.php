@@ -30,9 +30,7 @@ interface IModelRepository
      */
     public function getAvailableRelations();
 
-    public function getResource($data);
-
-    public function getResourceCollection($data, $paginate);
+    public function convertToResource($data, $paginate = true);
 
     /**
      * Находит модель по id, загружая указанные связи и учитывая `active`
