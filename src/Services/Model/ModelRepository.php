@@ -108,7 +108,7 @@ abstract class ModelRepository implements IModelRepository
         return $this->model->availableRelations ?: [];
     }
 
-    public function find($id, $relations = true, $trashed = null, $resource = false, $smart = false, $smartField = null)
+    public function find($id, $resource = false, $relations = true, $trashed = null, $resource = false, $smart = false, $smartField = null)
     {
         if (!$smart) {
             $model = $this->makeQB($relations, $trashed, null)->find($id);
@@ -126,7 +126,7 @@ abstract class ModelRepository implements IModelRepository
         return $resource ? $this->convertToResource($model) : $model;
     }
 
-    public function list($relations = true, $trashed = null, $active = null, $paginate = true, $resource = false)
+    public function list($resource = false, $relations = true, $trashed = null, $active = null, $paginate = true)
     {
         $qb = $this->makeQB($relations, $trashed, $active);
 
