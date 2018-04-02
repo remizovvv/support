@@ -43,9 +43,7 @@ interface IModelRepository
      * @throws OmxModelNotUsesTraitException
      * @return Model
      */
-    public function find($id, $relations = true, $trashed = null, $smart = false, $smartField = null);
-
-    public function findResource($id, $relations = true, $trashed = null, $smart = false, $smartField = null);
+    public function find($id, $resource = false, $relations = true, $trashed = null, $smart = false, $smartField = null);
 
     /**
      * Получает коллекцию элементов, загружая указанные связи и учитывая `active`
@@ -57,9 +55,7 @@ interface IModelRepository
      * @throws OmxModelNotUsesTraitException
      * @return LengthAwarePaginator | Collection
      */
-    public function list($relations = true, $trashed = null, $active = null, $paginate = true);
-
-    public function listResource($relations = true, $trashed = null, $active = null, $paginate = true);
+    public function list($resource = false, $relations = true, $trashed = null, $active = null, $paginate = true);
 
     public function agrCount($trashed = null, $active = null);
 }
