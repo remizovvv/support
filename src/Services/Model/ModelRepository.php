@@ -97,7 +97,7 @@ abstract class ModelRepository implements IModelRepository
 
     public function convertToResource($data, $paginate = true)
     {
-        if ($data instanceof Model::class) {
+        if ($data instanceof Model) {
             return new $this->resourceClass($data);
         }
 
@@ -108,7 +108,7 @@ abstract class ModelRepository implements IModelRepository
         return $this->resourceClass::collection($data);
     }
 
-    public function find($id, $resource = false, $relations = true, $trashed = null, $resource = false, $smart = false, $smartField = null)
+    public function find($id, $resource = false, $relations = true, $trashed = null, $smart = false, $smartField = null)
     {
         if (!$smart) {
             $model = $this->makeQB($relations, $trashed, null)->find($id);
