@@ -95,17 +95,28 @@ abstract class ModelRepository implements IModelRepository
         return $this->model->availableRelations ?: [];
     }
 
-    public function convertToResource($data, $paginate = true)
+    public function toResourceIfNeed($resource, $objData, $paginate = true)
     {
-        if ($data instanceof Model) {
-            return new $this->resourceClass($data);
+        if (!$resource) {
+            return $objData;
+        }
+
+        if ($objData instanceof Model) {
+            return new $this->resourceClass($objData);
         }
 
         if ($paginate) {
-            return new PaginateResourceCollection($data, $this->resourceClass);
+            return new PaginateResourceCollection($objData, $this->resourceClass);
         }
 
-        return $this->resourceClass::collection($data);
+        return $this->resourceClass::collection($objData);
+    }
+
+    public function getListedResult($qb, $resource, $paginate)
+    {
+        $result = $this->getPaginatedResult($qb, $paginate);
+
+        return $this->toResourceIfNeed($resource, $result, $paginate);
     }
 
     public function find($id, $resource = false, $relations = true, $trashed = null, $smart = false, $smartField = null)
@@ -123,16 +134,18 @@ abstract class ModelRepository implements IModelRepository
             }
         }
 
-        return $resource ? $this->convertToResource($model) : $model;
+        return $this->toResourceIfNeed($resource, $model);
     }
 
-    public function list($resource = false, $relations = true, $trashed = null, $active = null, $paginate = true)
+    public function list($resource = false, $relations = true, $trashed = null, $active = null, $paginate = true, $conditionsCallback = null)
     {
         $qb = $this->makeQB($relations, $trashed, $active);
 
-        $result = $this->getPaginatedResult($qb, $paginate);
+        if (is_callable($conditionsCallback)) {
+            $qb = $conditionsCallback($qb);
+        }
 
-        return $resource ? $this->convertToResource($result, $paginate) : $result;
+        return $this->getListedResult($qb, $resource, $paginate);
     }
 
     public function agrCount($trashed = null, $active = null)
