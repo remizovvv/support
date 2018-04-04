@@ -123,28 +123,21 @@ abstract class ModelRepository implements IModelRepository
         return $this->model->availableRelations ?: [];
     }
 
-    public function toResourceIfNeed($objData, $options)
+    public function toResource($modelOrCollection, $resource = false, $paginate = false)
     {
-        if (!$options['resource']) {
-            return $objData;
+        if (!$resource) {
+            return $modelOrCollection;
         }
 
-        if ($objData instanceof Model) {
-            return new $this->resourceClass($objData);
+        if ($modelOrCollection instanceof Model) {
+            return new $this->resourceClass($modelOrCollection);
         }
 
-        if ($options['paginate']) {
-            return new PaginateResourceCollection($objData, $this->resourceClass);
+        if ($paginate) {
+            return new PaginateResourceCollection($modelOrCollection, $this->resourceClass);
         }
 
-        return $this->resourceClass::collection($objData);
-    }
-
-    public function getListedResult($qb, $options)
-    {
-        $result = $this->getPaginatedResult($qb, $options);
-
-        return $this->toResourceIfNeed($result, $options);
+        return $this->resourceClass::collection($modelOrCollection);
     }
 
     public function find($id, $options = [])
@@ -160,14 +153,16 @@ abstract class ModelRepository implements IModelRepository
             throw new OmxModelNotSmartFoundException($this->model, $id, $field);
         }
 
-        return $this->toResourceIfNeed($model, $realOptions);
+        return $this->toResource($model, $options['resource'], false);
     }
 
     public function list($options = [])
     {
         $realOptions = $this->getRealOptions($options);
 
-        return $this->getListedResult($this->makeQB($realOptions), $realOptions);
+        $collection = $this->getPaginatedResult($this->makeQB($realOptions), $options);
+
+        return $this->toResource($collection, $options['resource'], $options['paginate']);
     }
 
     public function agrCount($options = [])

@@ -104,25 +104,38 @@ class ApiModelController extends ApiBaseController
 
     protected function modelFind($id, $resource = false, $smart = false, $smartField = null)
     {
-        return $this->repo->find($id, $resource, $this->relations, $this->trashed, $smart, $smartField);
+        return $this->repo->find($id, [
+            'resource' => $resource,
+            'relations' => $this->relations,
+            'trashed' => $this->trashed,
+            'active' => $this->active,
+            'smart' => $smart,
+            'smartField' => $smartField,
+        ]);
     }
 
     protected function modelList($resource = false)
     {
-        return $this->repo->list($resource, $this->relations, $this->trashed, $this->active, $this->paginate);
+        return $this->repo->list([
+            'resource' => $resource,
+            'relations' => $this->relations,
+            'trashed' => $this->trashed,
+            'active' => $this->active,
+            'paginate' => $this->paginate,
+        ]);
     }
 
     protected function modelCreate($data, $resource = false)
     {
         $model = $this->service->create($data);
 
-        return $resource ? $this->repo->convertToResource($model) : $model;
+        return $this->repo->toResource($model, $resource, false);
     }
 
     protected function modelUpdate($id, $data, $resource = false)
     {
         $model = $this->service->update($id, $data);
 
-        return $resource ? $this->repo->convertToResource($model) : $model;
+        return $this->repo->toResource($model, $resource, false);
     }
 }
