@@ -67,13 +67,13 @@ abstract class ModelRepository implements IModelRepository
         return $qb;
     }
 
-    protected function getPaginatedResult($qb, $options)
+    protected function getPaginatedResult($qb, $paginate)
     {
-        if (!$options['paginate']) {
+        if (!$paginate) {
             return $qb->get();
         }
 
-        return $qb->paginate(($options['paginate'] === true) ? $this->model->getPerPage() : $options['paginate']);
+        return $qb->paginate(($paginate === true) ? $this->model->getPerPage() : $paginate);
     }
 
     protected function makeQB($options)
@@ -153,16 +153,16 @@ abstract class ModelRepository implements IModelRepository
             throw new OmxModelNotSmartFoundException($this->model, $id, $field);
         }
 
-        return $this->toResource($model, $options['resource'], false);
+        return $this->toResource($model, $realOptions['resource'], false);
     }
 
     public function list($options = [])
     {
         $realOptions = $this->getRealOptions($options);
 
-        $collection = $this->getPaginatedResult($this->makeQB($realOptions), $options);
+        $collection = $this->getPaginatedResult($this->makeQB($realOptions), $realOptions['paginate']);
 
-        return $this->toResource($collection, $options['resource'], $options['paginate']);
+        return $this->toResource($collection, $realOptions['resource'], $realOptions['paginate']);
     }
 
     public function agrCount($options = [])
