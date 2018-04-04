@@ -11,7 +11,6 @@ namespace Omadonex\Support\Services\Model;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Omadonex\Support\Classes\CustomConstants;
-use Omadonex\Support\Classes\Exceptions\OmxModelNotFoundException;
 use Omadonex\Support\Classes\Exceptions\OmxModelNotSmartFoundException;
 use Omadonex\Support\Classes\Exceptions\OmxModelNotUsesTraitException;
 use Omadonex\Support\Interfaces\Model\IModelRepository;
@@ -31,53 +30,82 @@ abstract class ModelRepository implements IModelRepository
         $this->resourceClass = $resourceClass;
     }
 
-    protected function attachRelations($qb, $relations)
+    private function getRealOptions($options)
+    {
+        $keysValues = [
+            'resource' => false,
+            'relations' => false,
+            'trashed' => null,
+            'smart' => false,
+            'smartField' => null,
+            'active' => null,
+            'paginate' => false,
+            'conditionsCallback' => null,
+        ];
+
+        $realOptions = [];
+        foreach ($keysValues as $key => $value) {
+            $realOptions[$key] = array_key_exists($key, $options) ? $options[$key] : $value;
+        }
+
+        return $realOptions;
+    }
+
+    protected function attachRelations($qb, $options)
     {
         $prop = 'availableRelations';
-        if (($relations === true)
+        if (($options['relations'] === true)
             && property_exists($this->modelClass, $prop)
             && is_array($this->model->$prop)) {
             $qb->with($this->model->$prop);
         }
 
-        if (is_array($relations)) {
-            $qb->with($relations);
+        if (is_array($options['relations'])) {
+            $qb->with($options['relations']);
         }
 
         return $qb;
     }
 
-    protected function getPaginatedResult($qb, $paginate)
+    protected function getPaginatedResult($qb, $options)
     {
-        return (!$paginate) ? $qb->get() : $qb->paginate(($paginate === true) ? $this->model->getPerPage() : $paginate);
+        if (!$options['paginate']) {
+            return $qb->get();
+        }
+
+        return $qb->paginate(($options['paginate'] === true) ? $this->model->getPerPage() : $options['paginate']);
     }
 
-    protected function makeQB($relations, $trashed, $active)
+    protected function makeQB($options)
     {
         $qb = $this->model->query();
 
-        if (!is_null($trashed)) {
+        if (!is_null($options['trashed'])) {
             if (!in_array(SoftDeletes::class, class_uses($this->modelClass))) {
                 throw new OmxModelNotUsesTraitException($this->modelClass, SoftDeletes::class);
             }
 
-            if ($trashed === CustomConstants::DB_QUERY_TRASHED_WITH) {
+            if ($options['trashed'] === CustomConstants::DB_QUERY_TRASHED_WITH) {
                 $qb->withTrashed();
             }
 
-            if ($trashed === CustomConstants::DB_QUERY_TRASHED_ONLY) {
+            if ($options['trashed'] === CustomConstants::DB_QUERY_TRASHED_ONLY) {
                 $qb->onlyTrashed();
             }
         }
 
-        if (!is_null($active)) {
+        if (!is_null($options['active'])) {
             if (!in_array(CanBeActivatedTrait::class, class_uses($this->modelClass))) {
                 throw new OmxModelNotUsesTraitException($this->modelClass, CanBeActivatedTrait::class);
             }
-            $qb->byActive($active);
+            $qb->byActive($options['active']);
         }
 
-        return $this->attachRelations($qb, $relations);
+        if (is_callable($options['conditionsCallback'])) {
+            $qb = $options['conditionsCallback']($qb);
+        }
+
+        return $this->attachRelations($qb, $options);
     }
 
     public function getModel()
@@ -95,9 +123,9 @@ abstract class ModelRepository implements IModelRepository
         return $this->model->availableRelations ?: [];
     }
 
-    public function toResourceIfNeed($resource, $objData, $paginate = true)
+    public function toResourceIfNeed($objData, $options)
     {
-        if (!$resource) {
+        if (!$options['resource']) {
             return $objData;
         }
 
@@ -105,51 +133,47 @@ abstract class ModelRepository implements IModelRepository
             return new $this->resourceClass($objData);
         }
 
-        if ($paginate) {
+        if ($options['paginate']) {
             return new PaginateResourceCollection($objData, $this->resourceClass);
         }
 
         return $this->resourceClass::collection($objData);
     }
 
-    public function getListedResult($qb, $resource, $paginate)
+    public function getListedResult($qb, $options)
     {
-        $result = $this->getPaginatedResult($qb, $paginate);
+        $result = $this->getPaginatedResult($qb, $options);
 
-        return $this->toResourceIfNeed($resource, $result, $paginate);
+        return $this->toResourceIfNeed($result, $options);
     }
 
-    public function find($id, $resource = false, $relations = true, $trashed = null, $smart = false, $smartField = null)
+    public function find($id, $options = [])
     {
-        if (!$smart) {
-            $model = $this->makeQB($relations, $trashed, null)->find($id);
-            if (is_null($model)) {
-                throw new OmxModelNotFoundException($this->model, $id);
-            }
-        } else {
-            $field = $smartField ?: $this->model->getRouteKeyName();
-            $model = $this->makeQB($relations, $trashed, null)->where($field, $id)->first();
-            if (is_null($model)) {
-                throw new OmxModelNotSmartFoundException($this->model, $id, $field);
-            }
+        $realOptions = $this->getRealOptions($options);
+
+        $field = 'id';
+        if ($realOptions['smart']) {
+            $field = $realOptions['smartField'] ?: $this->model->getRouteKeyName();
+        }
+        $model = $this->makeQB($realOptions)->where($field, $id)->first();
+        if (is_null($model)) {
+            throw new OmxModelNotSmartFoundException($this->model, $id, $field);
         }
 
-        return $this->toResourceIfNeed($resource, $model);
+        return $this->toResourceIfNeed($model, $realOptions);
     }
 
-    public function list($resource = false, $relations = true, $trashed = null, $active = null, $paginate = true, $conditionsCallback = null)
+    public function list($options = [])
     {
-        $qb = $this->makeQB($relations, $trashed, $active);
+        $realOptions = $this->getRealOptions($options);
 
-        if (is_callable($conditionsCallback)) {
-            $qb = $conditionsCallback($qb);
-        }
-
-        return $this->getListedResult($qb, $resource, $paginate);
+        return $this->getListedResult($this->makeQB($realOptions), $realOptions);
     }
 
-    public function agrCount($trashed = null, $active = null)
+    public function agrCount($options = [])
     {
-        return $this->makeQB(false, $trashed, $active)->count();
+        $realOptions = $this->getRealOptions($options);
+
+        return $this->makeQB($realOptions)->count();
     }
 }

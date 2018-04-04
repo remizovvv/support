@@ -30,9 +30,9 @@ interface IModelRepository
      */
     public function getAvailableRelations();
 
-    public function toResourceIfNeed($resource, $objData, $paginate = true);
+    public function toResourceIfNeed($objData, $options);
 
-    public function getListedResult($qb, $resource, $paginate);
+    public function getListedResult($qb, $options);
 
     /**
      * Находит модель по id, загружая указанные связи и учитывая `active`
@@ -43,7 +43,8 @@ interface IModelRepository
      * @throws OmxModelNotUsesTraitException
      * @return Model
      */
-    public function find($id, $resource = false, $relations = true, $trashed = null, $smart = false, $smartField = null);
+    //public function find($id, $resource = false, $relations = true, $trashed = null, $smart = false, $smartField = null);
+    public function find($id, $options = []);
 
     /**
      * Получает коллекцию элементов, загружая указанные связи и учитывая `active`
@@ -55,7 +56,8 @@ interface IModelRepository
      * @throws OmxModelNotUsesTraitException
      * @return LengthAwarePaginator | Collection
      */
-    public function list($resource = false, $relations = true, $trashed = null, $active = null, $paginate = true, $conditionsCallback = null);
+    //public function list($resource = false, $relations = true, $trashed = null, $active = null, $paginate = true, $conditionsCallback = null);
+    public function list($options = []);
 
-    public function agrCount($trashed = null, $active = null);
+    public function agrCount($options = []);
 }
