@@ -114,9 +114,10 @@ class ApiModelController extends ApiBaseController
         ]);
     }
 
-    protected function modelList($resource = false)
+    protected function modelList($resource = false, $methodName = null)
     {
-        return $this->repo->list([
+        $method = $methodName ?: 'list';
+        return $this->repo->$method([
             'resource' => $resource,
             'relations' => $this->relations,
             'trashed' => $this->trashed,
