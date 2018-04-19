@@ -37,6 +37,11 @@ abstract class ModelService implements IModelService
         return $model;
     }
 
+    public function updateOrCreate($data)
+    {
+        return $this->repo->getModel()->updateOrCreate($data);
+    }
+
     public function destroy($id)
     {
         $this->repo->getModel()->destroy($id);
