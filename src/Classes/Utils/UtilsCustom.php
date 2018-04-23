@@ -27,15 +27,13 @@ class UtilsCustom
         $timezoneIdentifiers = \DateTimeZone::listIdentifiers();
         $utcTime = new \DateTime('now', new \DateTimeZone('UTC'));
 
-        $tempTimezones = array();
-        foreach ($timezoneIdentifiers as $timezoneIdentifier) {
+        $tempTimezones = array_map(function ($timezoneIdentifier) use ($utcTime) {
             $currentTimezone = new \DateTimeZone($timezoneIdentifier);
-
-            $tempTimezones[] = array(
+            return [
                 'offset' => (int)$currentTimezone->getOffset($utcTime),
                 'identifier' => $timezoneIdentifier
-            );
-        }
+            ];
+        }, $timezoneIdentifiers);
 
         // Sort the array by offset,identifier ascending
         usort($tempTimezones, function($a, $b) {
@@ -44,15 +42,7 @@ class UtilsCustom
                 : $a['offset'] - $b['offset'];
         });
 
-        $timezoneList = array();
-        foreach ($tempTimezones as $tz) {
-            $sign = ($tz['offset'] > 0) ? '+' : '-';
-            $offset = gmdate('H:i', abs($tz['offset']));
-            $timezoneList[$tz['identifier']] = '(UTC ' . $sign . $offset . ') ' .
-                $tz['identifier'];
-        }
-
-        return $timezoneList;
+        return $tempTimezones;
     }
 }
 
